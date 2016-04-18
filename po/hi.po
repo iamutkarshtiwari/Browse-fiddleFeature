@@ -1,0 +1,306 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# translation of web-activity.po to Hindi
+# G Karunakar <karunakar@indlinux.org>, 2007.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+msgid ""
+msgstr ""
+"Project-Id-Version: web-activity\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-06-28 00:32-0400\n"
+"PO-Revision-Date: 2011-11-30 05:11+0200\n"
+"Last-Translator: Chris <cjl@laptop.org>\n"
+"Language-Team: Hindi <indlinux-hindi@lists.sourceforge.net>\n"
+"Language: hi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 2.0.5\n"
+
+#. TRANS: "name" option from activity.info file
+msgid "Browse"
+msgstr "विचरण"
+
+#. TRANS: "summary" option from activity.info file
+#. TRANS: "description" option from activity.info file
+msgid ""
+"Surf the world! Here you can do research, watch educational videos, take "
+"online courses, find books, connect with friends and more."
+msgstr ""
+
+#: browser.py:472 browser.py:524 browser.py:525 webactivity.py:451
+msgid "Untitled"
+msgstr "बेनाम"
+
+#: browser.py:521
+msgid "Loading..."
+msgstr "लोड..."
+
+#: browser.py:757 browser.py:758
+msgid "This web page could not be loaded"
+msgstr ""
+
+#: browser.py:759
+#, python-format
+msgid ""
+"\"%s\" could not be loaded. Please check for typing errors, and make sure "
+"you are connected to the Internet."
+msgstr ""
+
+#: browser.py:762 pdfviewer.py:394
+msgid "Try again"
+msgstr ""
+
+#: downloadmanager.py:124
+msgid "Not enough space to download"
+msgstr ""
+
+#: downloadmanager.py:133
+msgid ""
+"Download \"%{filename}\" requires %{total_size_in_mb} MB of free space, only "
+"%{free_space_in_mb} MB is available"
+msgstr ""
+
+#: downloadmanager.py:141 downloadmanager.py:176
+msgid "Ok"
+msgstr "ठीक"
+
+#: downloadmanager.py:157
+msgid "Download started"
+msgstr "डाउनलोड चालू"
+
+#: downloadmanager.py:158 downloadmanager.py:170
+#, python-format
+msgid "%s"
+msgstr "%s"
+
+#: downloadmanager.py:168
+msgid "Download completed"
+msgstr "डाउनलोड पूरा"
+
+#: downloadmanager.py:173
+msgid "Show in Journal"
+msgstr "चिठ्ठा मे दिखाएँ"
+
+#: downloadmanager.py:184 pdfviewer.py:589
+#, python-format
+msgid "From: %s"
+msgstr "से : %s"
+
+# Don't translate %(file)s or %(source)s they are variables.
+#: downloadmanager.py:292
+#, python-format
+#, python-format, fuzzy
+msgid ""
+"Downloading %(filename)s from \n"
+"%(source)s."
+msgstr "%(file)s %(source)s से डाउनलोड हो रहा है."
+
+#: edittoolbar.py:65
+msgid "Previous"
+msgstr "पिछला"
+
+#: edittoolbar.py:72
+msgid "Next"
+msgstr "अगला"
+
+#: linkbutton.py:108
+msgid "Remove"
+msgstr "हटाएँ"
+
+#: palettes.py:184
+msgid "Follow link"
+msgstr "इस कड़ी पर जाएँ"
+
+#: palettes.py:189
+msgid "Follow link in new tab"
+msgstr "नए टैब में कड़ी पर जाएँ"
+
+#: palettes.py:198
+msgid "Keep link"
+msgstr "कड़ी को रखें"
+
+#: palettes.py:204
+msgid "Copy link"
+msgstr "कड़ी नक़ल करें"
+
+#: palettes.py:218
+msgid "Copy image"
+msgstr "फ़ोटो नक़ल करें"
+
+#: palettes.py:224
+msgid "Keep image"
+msgstr "फ़ोटो रखे रहें"
+
+#: palettes.py:238
+msgid "Copy text"
+msgstr ""
+
+#: pdfviewer.py:91 viewtoolbar.py:39
+msgid "Zoom out"
+msgstr "छोटा करें"
+
+#: pdfviewer.py:97 viewtoolbar.py:45
+msgid "Zoom in"
+msgstr "बड़ा करें"
+
+#: pdfviewer.py:103 viewtoolbar.py:51
+msgid "Actual size"
+msgstr ""
+
+#: pdfviewer.py:114
+msgid "Previous page"
+msgstr ""
+
+#: pdfviewer.py:121
+msgid "Next page"
+msgstr ""
+
+#: pdfviewer.py:133
+msgid "Save PDF to Journal"
+msgstr ""
+
+#: pdfviewer.py:341
+msgid "Cancel"
+msgstr "रद्द करें"
+
+#: pdfviewer.py:490
+msgid "Downloading document..."
+msgstr ""
+
+#: pdfviewer.py:546
+msgid "This document could not be loaded"
+msgstr ""
+
+#: pdfviewer.py:554
+msgid "Please make sure you are connected to the Internet."
+msgstr ""
+
+#: viewtoolbar.py:62
+msgid "Fullscreen"
+msgstr "पूरा पट"
+
+#: viewtoolbar.py:113
+msgid "Show Tray"
+msgstr "ट्रे दिखाएँ"
+
+#: viewtoolbar.py:116
+msgid "Hide Tray"
+msgstr "ट्रे छुपाएँ"
+
+#: webactivity.py:490
+msgid "The initial page was configured"
+msgstr ""
+
+#: webactivity.py:494
+msgid "The default initial page was configured"
+msgstr ""
+
+#: webactivity.py:655
+msgid "Download in progress"
+msgid_plural "Downloads in progress"
+msgstr[0] "डाउनलोड प्रगति में है"
+msgstr[1] ""
+
+#: webactivity.py:658
+msgid "Stopping now will erase your download"
+msgid_plural "Stopping now will erase your downloads"
+msgstr[0] "रोकने पर आपका डाउनलोड रद्द हो जाएगा"
+msgstr[1] "रोकने पर आपका डाउनलोड रद्द हो जायेगे"
+
+#: webactivity.py:663
+msgid "Continue download"
+msgid_plural "Continue downloads"
+msgstr[0] "डाउनलोड जारी रखे"
+msgstr[1] "डाउनलोड जारी रखे"
+
+#: webactivity.py:668
+msgid "Stop"
+msgstr "रूकें"
+
+#: webtoolbar.py:288
+msgid "Home page"
+msgstr "घर पृष्ठ"
+
+#: webtoolbar.py:294
+msgid "Select as initial page"
+msgstr ""
+
+#: webtoolbar.py:299
+msgid "Reset initial page"
+msgstr ""
+
+#: webtoolbar.py:305
+msgid "Library"
+msgstr ""
+
+#: webtoolbar.py:338
+msgid "Back"
+msgstr "पीछे"
+
+#: webtoolbar.py:352
+msgid "Forward"
+msgstr "आगे"
+
+#: webtoolbar.py:366
+msgid "Bookmark"
+msgstr "पसंदीदा"
+
+#, python-format
+#, python-format, fuzzy
+#~ msgid "Loading %s..."
+#~ msgstr "लोड..."
+
+#, python-format
+#~ msgid ""
+#~ "Downloading %s from \n"
+#~ "%s."
+#~ msgstr ""
+#~ "%s डाउनलोड किया जा रहा है \n"
+#~ "%s से."
+
+#~ msgid "Edit"
+#~ msgstr "संपादन"
+
+#~ msgid "View"
+#~ msgstr "दृश्य"
+
+#, fuzzy
+#~ msgid "Add a tab"
+#~ msgstr "ट़ाब जोड़ें"
+
+#~ msgid "Reload"
+#~ msgstr "फिर लोड करें"
+
+#, python-format
+#~ msgid "File %s from %s."
+#~ msgstr "फ़ाइल %s से %s"
+
+#~ msgid "blank"
+#~ msgstr "खाली"
+
+#~ msgid "Source"
+#~ msgstr "स्रोत"
+
+#~ msgid "Open"
+#~ msgstr "खोलें"
+
+#, python-format
+#~ msgid ""
+#~ "File %s downloaded from\n"
+#~ "%s."
+#~ msgstr ""
+#~ "%s फ़ाइल डाउनलोड किया गया\n"
+#~ "%s से."
