@@ -27,7 +27,6 @@ from sugar3.graphics.toggletoolbutton import ToggleToolButton
 
 from browser import Browser
 from browser import ZOOM_ORIGINAL
-from fiddletoolbar import FiddleToolbar
 
 
 class OptionsToolbar(Gtk.Toolbar):
