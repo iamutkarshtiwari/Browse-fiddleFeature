@@ -27,6 +27,7 @@ from gi.repository import Pango
 from gi.repository import WebKit
 
 from sugar3.graphics.toolbutton import ToolButton
+from sugar3.graphics.toolbarbox import ToolbarButton
 from sugar3.graphics import iconentry
 from sugar3.graphics.toolbarbox import ToolbarBox as ToolbarBase
 from sugar3.graphics.palettemenu import PaletteMenuItem
@@ -42,6 +43,7 @@ from sugar3.graphics.icon import Icon
 import tempfile
 import filepicker
 import places
+from optionstoolbar import OptionsToolbar
 from browser import Browser
 from browser import HOME_PAGE_GCONF_KEY, LIBRARY_PATH
 
@@ -408,6 +410,18 @@ class PrimaryToolbar(ToolbarBase):
         self._toolbar_separator.props.draw = False
         self._toolbar_separator.set_expand(True)
 
+        # Adds a options toolbar button
+        self._options_toolbar = OptionsToolbar(self._activity)
+
+        self._options_toolbar_button = ToolbarButton(
+            page=self._options_toolbar, icon_name='options')
+        #self._options_toolbar_button.set_tooltip(_('Options'))
+        toolbar.insert(self._options_toolbar_button , -1)
+
+
+
+        '''
+
         #adding a button for Web Console
         self._go_webconsole = ToolButton('go_webconsole')
         self._go_webconsole.set_tooltip(_('Open/Run Web Console'))
@@ -438,6 +452,7 @@ class PrimaryToolbar(ToolbarBase):
         webconsole_menu_box.show_all()
         toolbar.insert(self._go_webconsole, -1)
         self._go_webconsole.show()
+        '''
 
         stop_button = StopButton(self._activity)
         toolbar.insert(stop_button, -1)
