@@ -114,8 +114,8 @@ class WebConsole():
         browser.execute_script(fill_title_script)
 
     def open_new_tab(self):
-        self._activity._primary_toolbar._go_webconsole.set_icon_name('run_webconsole')
-        self._activity._primary_toolbar._go_webconsole.show()
+        #self._activity._primary_toolbar._go_webconsole.set_icon_name('run_webconsole')
+        #self._activity._primary_toolbar._go_webconsole.show()
         browser = self._activity._tabbed_view.props.current_browser
         if browser.get_uri() == self._src_uri:
             self.run()
