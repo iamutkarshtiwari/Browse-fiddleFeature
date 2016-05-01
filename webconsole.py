@@ -34,12 +34,10 @@ class WebConsole():
                                 "data/web-console.html")
         self._src_uri = "file://" + src_path
 
-        parent_dir = os.path.join(act.get_activity_root(),
+        self.parent_dir = os.path.join(act.get_activity_root(),
                                   "Web_Console_Files")
-        if not os.path.exists(parent_dir):
-            os.makedirs(parent_dir)
-        self._storage_dir = tempfile.mkdtemp(dir=parent_dir)
-        self._index_html_path = os.path.join(self._storage_dir, "index.html")
+        if not os.path.exists(self.parent_dir):
+            os.makedirs(self.parent_dir)
         self._load_status_changed_hid = None
         self._file_path = None
 
@@ -70,7 +68,7 @@ class WebConsole():
     def _add_to_journal(self, title, file_path):
         jobject = datastore.create()
 
-        jobject.metadata['title'] = title
+        jobject.metadata['title'] = title + '.html'
         jobject.metadata['description'] = "Saved from web console"
 
         jobject.metadata['mime_type'] = "application/zip"
@@ -110,6 +108,11 @@ class WebConsole():
                                   "You can only Save a file from Web Console")
             return
         file_text = self._get_file_text('run')
+        # Grabs the name between <title> tags
+        output  = re.compile('<title>(.*?)</title>', re.DOTALL |  re.IGNORECASE).findall(file_text)
+        # Assigns the path to the directories
+        folder_name = output[0].strip().replace (" ", "_")
+        self._get_path(output[0])
         # Write to file
         with open(self._index_html_path, 'w') as f:
             f.write(file_text)
@@ -125,11 +128,24 @@ class WebConsole():
                                   "You can only Save a file from Web Console")
             return
         file_text = self._get_file_text('save')
+        # Grabs the name between <title> tags
+        output  = re.compile('<title>(.*?)</title>', re.DOTALL |  re.IGNORECASE).findall(file_text)
+        if len(output) != 0:
+            # Assigns the path to the directories
+            folder_name = output[0].strip().replace (" ", "_")
+            self._get_path(folder_name)
+            # Creates the directory to save the files
+            os.makedirs(self._storage_dir)
+        else:
+            self._get_path('')    
+
+        
         # Write to file
         with open(self._index_html_path, 'w') as f:
             f.write(file_text)
+        
+        
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
-        print save_name
         zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
         self._add_to_journal(save_name, zip_name)
 
@@ -152,6 +168,9 @@ class WebConsole():
             if not valid:
                 self._activity._alert("No index.html file in the zip folder.")
                 return
+
+            chosen = os.path.splitext(os.path.basename(os.path.normpath(chosen)))[0]
+            self._get_path(chosen)
             zip_object.extractall(self._storage_dir)
             chosen = self._index_html_path
         self._open_file_path(chosen)
@@ -170,7 +189,7 @@ class WebConsole():
         self._activity._alert(chosen)
         for ext in extensions:
             if chosen.endswith(ext):
-                valid = True
+                valid = True            
                 break
         if not valid:
             self._activity._alert("Only jpg, png and gif files accepted")
@@ -178,6 +197,14 @@ class WebConsole():
         image_name = os.path.basename(os.path.normpath(chosen))
         image_path = os.path.join(self._storage_dir, image_name)
         shutil.copyfile(chosen, image_path)
+
+    def _get_path(self, folder_name):
+        # Creates the files directory by the specified 'folder_name'
+        if len(folder_name) == 0:
+            self._storage_dir = tempfile.mkdtemp(dir=self.parent_dir)
+        else:          
+            self._storage_dir = os.path.join(self.parent_dir, folder_name)
+        self._index_html_path = os.path.join(self._storage_dir, "index.html")
 
     def _get_javascript_input(self, data):
         start_head = data.find("<head>")
@@ -206,7 +233,7 @@ class WebConsole():
         if len(data) == start_style_tag + 6:
             return ""
         end_style_tag = data.find(">", start_style_tag)
-        end_style = data.find("</style>")
+        end_style = data.find("</style>") 
         if (start_head > start_style_tag or end_head < end_style or
                 end_style_tag > end_style):
             return ""
