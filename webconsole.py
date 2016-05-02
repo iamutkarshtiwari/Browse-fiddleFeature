@@ -15,16 +15,24 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from filepicker import FilePicker
+from gettext import gettext as _
 import os
 import re
 import tempfile
 import shutil
 import zipfile
 
+from gi.repository import Gtk
 from gi.repository import WebKit
+from gi.repository import GObject
+from gi.repository import GLib
 
+from sugar3.graphics import style
+from sugar3.graphics.alert import ErrorAlert, Alert
+from sugar3.graphics.icon import Icon
 from sugar3.activity import activity
 from sugar3.datastore import datastore
+
 
 class WebConsole():
     def __init__(self, act):
@@ -137,17 +145,69 @@ class WebConsole():
             # Creates the directory to save the files
             os.makedirs(self._storage_dir)
         else:
-            self._get_path('')    
+            self._save_alert = SaveAlert()
+            self._save_alert.props.title = _('Save As')
+            self._save_alert.props.msg = _('Provide the name for the project')
+            ok_icon = Icon(icon_name='dialog-ok')
+            self._save_alert.add_button(Gtk.ResponseType.OK,
+                                                _('Ok'), ok_icon)
+            cancel_icon = Icon(icon_name='dialog-cancel')
+            self._save_alert.add_button(Gtk.ResponseType.CANCEL,
+                                                _('Cancel'), cancel_icon)
+            self._save_alert._name_entry.grab_focus()
+            self._save_alert.connect('response',
+                                             self.__save_response_cb)
 
-        
-        # Write to file
-        with open(self._index_html_path, 'w') as f:
-            f.write(file_text)
-        
-        
-        save_name = os.path.basename(os.path.normpath(self._storage_dir))
-        zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
-        self._add_to_journal(save_name, zip_name)
+
+            self._activity.add_alert(self._save_alert)
+            self._save_alert.show()
+
+
+
+    def __save_response_cb(self, alert, response_id):
+        if response_id == Gtk.ResponseType.OK:
+            folder_name = 'not named'
+            folder_name = folder_name.strip().replace (" ", "_")
+            self._get_path(folder_name)
+            try:
+                # Tries to create a directory
+                os.makedirs(self._storage_dir)
+            except OSError as e:
+                # If the directory with the same name already
+                # exists, ask the user to save with another name
+                self._activity.remove_alert(alert)
+                self._error_alert = ErrorAlert()
+                self._error_alert.props.msg = _('The project name already exists, choose another name')
+                self._activity.remove_alert(self._save_alert)
+                self._activity.add_alert(self._error_alert)
+                self._error_alert.show()
+                self._error_alert.connect('response',
+                                             self.__error_response_cb)
+                self.save_file()
+
+            file_text = self._get_file_text('save')
+            # Write to file
+            with open(self._index_html_path, 'w') as f:
+                f.write(file_text)
+
+            save_name = os.path.basename(os.path.normpath(self._storage_dir))
+            zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
+            self._add_to_journal(save_name, zip_name)
+
+        if response_id == Gtk.ResponseType.CANCEL:
+            self._activity.remove_alert(alert)
+
+    def __error_response_cb(self, alert, response_id):
+        if response_id == Gtk.ResponseType.OK:
+            self._activity.remove_alert(self._error_alert)
+            self.save_file()
+
+
+    def _get_path(self, folder_name):
+        # Creates the files directory by the specified 'folder_name'
+        self._storage_dir = os.path.join(self.parent_dir, folder_name)
+        self._index_html_path = os.path.join(self._storage_dir, "index.html")
+
 
     def open_file(self):
         browser = self._activity._tabbed_view.props.current_browser
@@ -189,7 +249,7 @@ class WebConsole():
         self._activity._alert(chosen)
         for ext in extensions:
             if chosen.endswith(ext):
-                valid = True            
+                valid = True
                 break
         if not valid:
             self._activity._alert("Only jpg, png and gif files accepted")
@@ -198,13 +258,7 @@ class WebConsole():
         image_path = os.path.join(self._storage_dir, image_name)
         shutil.copyfile(chosen, image_path)
 
-    def _get_path(self, folder_name):
-        # Creates the files directory by the specified 'folder_name'
-        if len(folder_name) == 0:
-            self._storage_dir = tempfile.mkdtemp(dir=self.parent_dir)
-        else:          
-            self._storage_dir = os.path.join(self.parent_dir, folder_name)
-        self._index_html_path = os.path.join(self._storage_dir, "index.html")
+
 
     def _get_javascript_input(self, data):
         start_head = data.find("<head>")
@@ -233,7 +287,7 @@ class WebConsole():
         if len(data) == start_style_tag + 6:
             return ""
         end_style_tag = data.find(">", start_style_tag)
-        end_style = data.find("</style>") 
+        end_style = data.find("</style>")
         if (start_head > start_style_tag or end_head < end_style or
                 end_style_tag > end_style):
             return ""
@@ -284,3 +338,36 @@ class WebConsole():
 
         fill_title_script = "document.title = '" + title + "';"
         browser.execute_script(fill_title_script)
+
+
+class SaveAlert(Alert):
+    """
+    Creates a alert popup to prompt the user to specify
+    a name for the project to be saved.
+    """
+    __gtype_name__ = 'ProjectSaveAsAlert'
+
+    def __init__(self, **kwargs):
+        Alert.__init__(self, **kwargs)
+        # Name entry box
+        self._name_view = Gtk.EventBox()
+        self._name_view.show()
+
+        # Entry box
+        self._name_entry = Gtk.Entry()
+        halign = Gtk.Alignment.new(0, 0, 0, 0)
+        self._hbox.pack_start(halign, False, False, 0)
+        halign.add(self._name_view)
+        halign.show()
+
+        self._name_view.add(self._name_entry)
+        self._name_entry.show()
+
+        halign = Gtk.Alignment.new(0, 0, 0, 0)
+        self._buttons_box = Gtk.HButtonBox()
+        self._buttons_box.set_layout(Gtk.ButtonBoxStyle.END)
+        self._buttons_box.set_spacing(style.DEFAULT_SPACING)
+        halign.add(self._buttons_box)
+        self._hbox.pack_start(halign, False, False, 0)
+        halign.show()
+        self.show_all()
