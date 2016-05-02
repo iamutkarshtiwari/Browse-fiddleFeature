@@ -154,21 +154,23 @@ class WebConsole():
             cancel_icon = Icon(icon_name='dialog-cancel')
             self._save_alert.add_button(Gtk.ResponseType.CANCEL,
                                                 _('Cancel'), cancel_icon)
-            self._save_alert._name_entry.grab_focus()
             self._save_alert.connect('response',
                                              self.__save_response_cb)
-
-
+            self._save_alert._name_entry.grab_focus()
             self._activity.add_alert(self._save_alert)
             self._save_alert.show()
 
 
 
     def __save_response_cb(self, alert, response_id):
+
+
         if response_id == Gtk.ResponseType.OK:
-            folder_name = 'not named'
+            folder_name = alert._name_entry.get_text()
             folder_name = folder_name.strip().replace (" ", "_")
             self._get_path(folder_name)
+            self._activity.remove_alert(alert)
+
             try:
                 # Tries to create a directory
                 os.makedirs(self._storage_dir)
@@ -178,12 +180,14 @@ class WebConsole():
                 self._activity.remove_alert(alert)
                 self._error_alert = ErrorAlert()
                 self._error_alert.props.msg = _('The project name already exists, choose another name')
-                self._activity.remove_alert(self._save_alert)
                 self._activity.add_alert(self._error_alert)
                 self._error_alert.show()
                 self._error_alert.connect('response',
                                              self.__error_response_cb)
-                self.save_file()
+                
+                return
+
+
 
             file_text = self._get_file_text('save')
             # Write to file
