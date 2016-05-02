@@ -46,8 +46,18 @@ class WebConsole():
                                   "Web_Console_Files")
         if not os.path.exists(self.parent_dir):
             os.makedirs(self.parent_dir)
+
+        self._storage_dir = os.path.join(self.parent_dir, "default")
+        try:
+            os.makedirs(self._storage_dir)
+        except OSError as e:
+            pass
+        self._index_html_path = os.path.join(self._storage_dir, "index.html")
+
         self._load_status_changed_hid = None
         self._file_path = None
+
+
 
     def __del__(self):
         shutil.rmtree(self._storage_dir)
@@ -116,14 +126,9 @@ class WebConsole():
                                   "You can only Save a file from Web Console")
             return
         file_text = self._get_file_text('run')
-        # Grabs the name between <title> tags
-        output  = re.compile('<title>(.*?)</title>', re.DOTALL |  re.IGNORECASE).findall(file_text)
-        # Assigns the path to the directories
-        folder_name = output[0].strip().replace (" ", "_")
-        self._get_path(output[0])
-        # Write to file
         with open(self._index_html_path, 'w') as f:
-            f.write(file_text)
+            f.write(file_text + '\n')
+
         text_script = \
             "var iframe = document.getElementById('iframe');" \
             "iframe.src = '" + self._index_html_path + "';"
@@ -144,6 +149,8 @@ class WebConsole():
             self._get_path(folder_name)
             # Creates the directory to save the files
             os.makedirs(self._storage_dir)
+            self._do_save()
+
         else:
             self._save_alert = SaveAlert()
             self._save_alert.props.title = _('Save As')
@@ -174,6 +181,7 @@ class WebConsole():
             try:
                 # Tries to create a directory
                 os.makedirs(self._storage_dir)
+                self._do_save()
             except OSError as e:
                 # If the directory with the same name already
                 # exists, ask the user to save with another name
@@ -184,19 +192,7 @@ class WebConsole():
                 self._error_alert.show()
                 self._error_alert.connect('response',
                                              self.__error_response_cb)
-                
                 return
-
-
-
-            file_text = self._get_file_text('save')
-            # Write to file
-            with open(self._index_html_path, 'w') as f:
-                f.write(file_text)
-
-            save_name = os.path.basename(os.path.normpath(self._storage_dir))
-            zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
-            self._add_to_journal(save_name, zip_name)
 
         if response_id == Gtk.ResponseType.CANCEL:
             self._activity.remove_alert(alert)
@@ -211,6 +207,16 @@ class WebConsole():
         # Creates the files directory by the specified 'folder_name'
         self._storage_dir = os.path.join(self.parent_dir, folder_name)
         self._index_html_path = os.path.join(self._storage_dir, "index.html")
+
+    def _do_save(self):
+        file_text = self._get_file_text('save')
+        # Write to file
+        with open(self._index_html_path, 'w') as f:
+            f.write(file_text + '\n')
+
+        save_name = os.path.basename(os.path.normpath(self._storage_dir))
+        zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
+        self._add_to_journal(save_name, zip_name)
 
 
     def open_file(self):
