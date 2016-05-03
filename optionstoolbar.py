@@ -53,12 +53,9 @@ class OptionsToolbar(Gtk.Toolbar):
 
         # Adds view-page-source toolbutton
         self._view_source = ToolButton('view-page-source')
-        self._view_source.connect('clicked', self._view_page_source_cb)
+        #self._view_source.connect('clicked', self._view_page_source_cb)
         self.insert(self._view_source, -1)
         self._view_source.show()
-
-    def _view_page_source_cb(self, button):
-        
 
     def __tray_toggled_cb(self, button):
         if button.props.active:
