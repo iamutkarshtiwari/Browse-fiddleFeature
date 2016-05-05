@@ -32,6 +32,7 @@ from sugar3.graphics.toggletoolbutton import ToggleToolButton
 from browser import Browser
 from browser import ZOOM_ORIGINAL
 from fiddlermenu import FiddlerMenu
+import json
 
 
 class OptionsToolbar(Gtk.Toolbar):
@@ -52,15 +53,54 @@ class OptionsToolbar(Gtk.Toolbar):
         self._fiddler_menu.show()
 
         # Adds view-page-source toolbutton
-        self._view_source = ToolButton('view-page-source')
-        #self._view_source.connect('clicked', self._view_page_source_cb)
+        self._view_source = ToolButton('view-source')
+        self._view_source.set_tooltip(_('View Page Source'))
+        self._view_source.connect('clicked', self._view_page_source_cb)
         self.insert(self._view_source, -1)
         self._view_source.show()
 
+    def _view_page_source_cb(self, button):
+        browser = self._activity._tabbed_view.props.current_browser
+
+
+        text = browser.get_main_frame().get_data_source().get_data()
+
+        '''
+        page = self._canvas.get_current_page()
+        webview = self._canvas.get_children()[page].props.browser
+        inspector = webview.get_inspector()
+        if inspector is not None:
+            inspector.show()
+            inspector.attach()
+        '''
+        #print text.str
+        #print type(text.str)
+
+        browser = self._activity._tabbed_view.add_tab(next_to_current=True)
+        #browser.load_uri('about:blank')
+        #browser.get_main_frame().
+        #text = text.str
+        
+        #text_string = '<textarea >' + text.str + '</textarea>'
+       
+        # #print a
+        # text_string = text.str
+        # print "Start"
+        # print text_string
+        #text_script = "document.write('<pre>" + text.str + "</pre>')"
+        #text_script = """document.write('{}')""".format(text_string)
+        # print text_script
+        # print "\n\nEnd\n\n"
+        #browser.execute_script(text_script)
+
+        #browser.grab_focus()
+
+    '''
     def __tray_toggled_cb(self, button):
         if button.props.active:
             self._activity.tray.show()
         else:
             self._activity.tray.hide()
         self.update_traybutton_tooltip()
+    '''    
 

@@ -53,7 +53,7 @@ class FiddlerMenu(ToolButton):
         self.props.hide_tooltip_on_click = False
         self._palette = self.get_palette()
 
-        self.connect('clicked', self._go_webconsole_cb)
+        #self.connect('clicked', self._go_webconsole_cb)
 
         menu_box = PaletteMenuBox()
 
@@ -84,15 +84,19 @@ class FiddlerMenu(ToolButton):
         self.emit('go-webconsole')
 
     def _save_file_webconsole_cb(self, button):
+        self.palette.popdown(True)
         self.emit('save-file-webconsole')
 
     def _open_file_webconsole_cb(self, button):
+        self.palette.popdown(True)
         self.emit('open-file-webconsole')
 
     def _run_webconsole_cb(self, button):
+        self.palette.popdown(True)
         self.emit('run-webconsole')
 
     def _add_image_webconsole_cb(self, button):
+        self.palette.popdown(True)
         self.emit('add-image-webconsole')
 
 class PaletteMenuBox(Gtk.HBox):
@@ -113,7 +117,7 @@ class PaletteMenuBox(Gtk.HBox):
         self._item_label.show()
 
         self.pack_start(self.vbox, False, False, style.DEFAULT_SPACING)
-
+'''
 class PaletteMenuItemSeparator(Gtk.EventBox):
     """Contains a HSeparator and has the proper height for the menu."""
 
@@ -125,3 +129,4 @@ class PaletteMenuItemSeparator(Gtk.EventBox):
         self.add(separator)
         separator.show()
         self.set_size_request(-1, style.DEFAULT_SPACING * 2)
+'''
