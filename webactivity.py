@@ -191,15 +191,13 @@ class WebActivity(activity.Activity):
 
         self._primary_toolbar.connect('reset-home', self._reset_home_button_cb)
 
-        self._primary_toolbar._options_toolbar._fiddler_menu.connect('go-webconsole', self._go_webconsole_button_cb)
+        self._primary_toolbar._options_toolbar.connect('save-file-webconsole', self._save_file_webconsole_button_cb)
 
-        self._primary_toolbar._options_toolbar._fiddler_menu.connect('save-file-webconsole', self._save_file_webconsole_button_cb)
+        self._primary_toolbar._options_toolbar.connect('open-file-webconsole', self._open_file_webconsole_button_cb)
 
-        self._primary_toolbar._options_toolbar._fiddler_menu.connect('open-file-webconsole', self._open_file_webconsole_button_cb)
+        self._primary_toolbar._options_toolbar.connect('run-webconsole', self._run_webconsole_button_cb)
 
-        self._primary_toolbar._options_toolbar._fiddler_menu.connect('run-webconsole', self._run_webconsole_button_cb)
-
-        self._primary_toolbar._options_toolbar._fiddler_menu.connect('add-image-webconsole', self._add_image_webconsole_button_cb)
+        self._primary_toolbar._options_toolbar.connect('add-image-webconsole', self._add_image_webconsole_button_cb)
 
         self._edit_toolbar_button = ToolbarButton(
             page=self._edit_toolbar, icon_name='toolbar-edit')

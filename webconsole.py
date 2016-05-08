@@ -122,8 +122,7 @@ class WebConsole():
     def run(self):
         browser = self._activity._tabbed_view.props.current_browser
         if browser.get_uri() != self._src_uri:
-            self._activity._alert("It looks like the Web Console is not open." +
-                                  "You can only Save a file from Web Console")
+            self.open_new_tab()
             return
         file_text = self._get_file_text('run')
         with open(self._index_html_path, 'w') as f:
