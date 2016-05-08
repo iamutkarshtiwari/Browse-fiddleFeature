@@ -488,9 +488,6 @@ class WebActivity(activity.Activity):
     def _go_home_button_cb(self, button):
         self._tabbed_view.load_homepage()
 
-    def _go_webconsole_button_cb(self, button):
-        self._web_console.open_new_tab()
-
     def _save_file_webconsole_button_cb(self, button):
         self._web_console.save_file()
 
