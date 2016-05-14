@@ -117,13 +117,13 @@ class WebConsole():
 
     def open_new_tab(self):
         browser = self._activity._tabbed_view.props.current_browser
-        browser.get_source(self._open_with_source, self._open_empty)
+        self._open_empty()
 
     def run(self):
         browser = self._activity._tabbed_view.props.current_browser
         if browser.get_uri() != self._src_uri:
             self.open_new_tab()
-            return
+
         file_text = self._get_file_text('run')
         with open(self._index_html_path, 'w') as f:
             f.write(file_text + '\n')
@@ -132,6 +132,7 @@ class WebConsole():
             "var iframe = document.getElementById('iframe');" \
             "iframe.src = '" + self._index_html_path + "';"
         browser.execute_script(text_script)
+        print 'hello'
 
     def save_file(self):
         browser = self._activity._tabbed_view.props.current_browser
