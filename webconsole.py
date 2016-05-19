@@ -26,6 +26,7 @@ from gi.repository import Gtk
 from gi.repository import WebKit
 from gi.repository import GObject
 from gi.repository import GLib
+from BeautifulSoup import BeautifulSoup
 
 from sugar3.graphics import style
 from sugar3.graphics.alert import ErrorAlert, Alert
@@ -48,6 +49,8 @@ class WebConsole():
             os.makedirs(self.parent_dir)
 
         self._storage_dir = os.path.join(self.parent_dir, "default")
+        self._extraction_dir = os.path.join(act.get_activity_root(),
+                                  "instance")
         try:
             os.makedirs(self._storage_dir)
         except OSError as e:
@@ -86,7 +89,7 @@ class WebConsole():
     def _add_to_journal(self, title, file_path):
         jobject = datastore.create()
 
-        jobject.metadata['title'] = title + '.html'
+        jobject.metadata['title'] = title
         jobject.metadata['description'] = "Saved from web console"
 
         jobject.metadata['mime_type'] = "application/zip"
@@ -123,16 +126,16 @@ class WebConsole():
         browser = self._activity._tabbed_view.props.current_browser
         if browser.get_uri() != self._src_uri:
             self.open_new_tab()
+            return
 
         file_text = self._get_file_text('run')
         with open(self._index_html_path, 'w') as f:
-            f.write(file_text + '\n')
+            f.write(file_text)
 
         text_script = \
             "var iframe = document.getElementById('iframe');" \
             "iframe.src = '" + self._index_html_path + "';"
         browser.execute_script(text_script)
-        print 'hello'
 
     def save_file(self):
         browser = self._activity._tabbed_view.props.current_browser
@@ -142,8 +145,10 @@ class WebConsole():
             return
         file_text = self._get_file_text('save')
         # Grabs the name between <title> tags
-        output  = re.compile('<title>(.*?)</title>', re.DOTALL |  re.IGNORECASE).findall(file_text)
-        if len(output) != 0:
+        #output  = re.compile('<title>(.*?)</title>', re.DOTALL |  re.IGNORECASE).findall(file_text)
+        output = self._get_title(file_text)
+        #print len(output.strip())
+        if len(output.strip()) != 0:
             # Assigns the path to the directories
             folder_name = output[0].strip().replace (" ", "_")
             self._get_path(folder_name)
@@ -186,21 +191,26 @@ class WebConsole():
                 # If the directory with the same name already
                 # exists, ask the user to save with another name
                 self._activity.remove_alert(alert)
-                self._error_alert = ErrorAlert()
-                self._error_alert.props.msg = _('The project name already exists, choose another name')
-                self._activity.add_alert(self._error_alert)
-                self._error_alert.show()
-                self._error_alert.connect('response',
-                                             self.__error_response_cb)
+                self._overwrite_alert = OverwriteAlert()
+                self._overwrite_alert.props.msg = _('The project name already exists. \
+                                                Would you like to overwrite or choose a new name?')
+                self._activity.add_alert(self._overwrite_alert)
+                self._overwrite_alert.show()
+                self._overwrite_alert.connect('response',
+                                             self.__overwrite_response_cb)
                 return
 
         if response_id == Gtk.ResponseType.CANCEL:
             self._activity.remove_alert(alert)
 
-    def __error_response_cb(self, alert, response_id):
-        if response_id == Gtk.ResponseType.OK:
-            self._activity.remove_alert(self._error_alert)
+    def __overwrite_response_cb(self, alert, response_id):
+        self._activity.remove_alert(self._overwrite_alert)
+        if response_id == Gtk.ResponseType.CANCEL:
             self.save_file()
+
+        if response_id == Gtk.ResponseType.OK:
+            self._do_save()
+
 
 
     def _get_path(self, folder_name):
@@ -211,8 +221,11 @@ class WebConsole():
     def _do_save(self):
         file_text = self._get_file_text('save')
         # Write to file
-        with open(self._index_html_path, 'w') as f:
-            f.write(file_text + '\n')
+        with open(self._index_html_path, 'w+') as f:
+            soup = BeautifulSoup(file_text)
+            #print soup.prettify()
+            f.write(soup.prettify())
+            #f.write(file_text)
 
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
         zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
@@ -239,10 +252,13 @@ class WebConsole():
                 self._activity._alert("No index.html file in the zip folder.")
                 return
 
-            chosen = os.path.splitext(os.path.basename(os.path.normpath(chosen)))[0]
-            self._get_path(chosen)
-            zip_object.extractall(self._storage_dir)
-            chosen = self._index_html_path
+        # Removes the unnecessary files/folders inside 'instance' folder
+        shutil.rmtree(self._extraction_dir)
+        chosen = os.path.splitext(os.path.basename(os.path.normpath(chosen)))[0]
+        chosen = os.path.splitext(chosen)[0]
+        self._get_path(chosen)
+        zip_object.extractall(os.path.join(self._extraction_dir, chosen))
+        chosen = os.path.join(self._extraction_dir, chosen, "index.html")
         self._open_file_path(chosen)
 
     def add_image(self):
@@ -286,7 +302,8 @@ class WebConsole():
         if (data.find("src=", start_script_tag, end_script_tag) > 0 or
                 data.find("src =", start_script_tag, end_script_tag) > 0):
             return ""
-        return data[end_script_tag + 1 : end_script]
+        #return data[end_script_tag + 1 : end_script]
+        return (BeautifulSoup(data[end_script_tag + 1 : end_script])).prettify()
 
     def _get_css_input(self, data):
         start_head = data.find("<head>")
@@ -301,13 +318,15 @@ class WebConsole():
         if (start_head > start_style_tag or end_head < end_style or
                 end_style_tag > end_style):
             return ""
-        return data[end_style_tag + 1 : end_style]
+        #return data[end_style_tag + 1 : end_style]
+        return (BeautifulSoup(data[end_style_tag + 1 : end_style])).prettify()
 
     def _get_html_input(self, data):
         start = data.find("<body>")
         end = data.find("</body>")
         if start > -1 and end > -1 and start < end:
-            return data[start + 6 : end]
+            #return data[start + 6 : end]
+            return (BeautifulSoup(data[start + 6 : end])).prettify()
         return ""
 
     def _get_title(self, data):
@@ -381,3 +400,20 @@ class SaveAlert(Alert):
         self._hbox.pack_start(halign, False, False, 0)
         halign.show()
         self.show_all()
+
+class OverwriteAlert(Alert):
+    """
+    Alert to prompt user to overwrite the existing project or
+    save it with a new name.
+    """
+
+    def __init__(self, **kwargs):
+        Alert.__init__(self, **kwargs)
+
+        icon = Icon(icon_name='dialog-cancel')
+        self.add_button(Gtk.ResponseType.CANCEL, _('Save As'), icon)
+        icon.show()
+
+        icon = Icon(icon_name='dialog-ok')
+        self.add_button(Gtk.ResponseType.OK, _('Overwrite'), icon)
+        icon.show()

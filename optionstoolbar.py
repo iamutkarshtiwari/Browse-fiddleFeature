@@ -23,6 +23,7 @@ from gettext import gettext as _
 
 from gi.repository import Gtk
 from gi.repository import GObject
+from BeautifulSoup import BeautifulSoup
 
 from sugar3.graphics import style
 from sugar3.graphics.toolbutton import ToolButton
@@ -99,7 +100,13 @@ class OptionsToolbar(Gtk.Toolbar):
 
         text = str(text.str)
         browser = self._activity._tabbed_view.add_tab(next_to_current=True)
-        browser.load_string(text, "text/plain", "UTF-8", '/')
+
+
+        soup = BeautifulSoup(text)
+        #print soup.prettify()
+
+
+        browser.load_string(soup.prettify(), "text/plain", "UTF-8", '/')
 
     def _save_file_webconsole_cb(self, button):
         self.emit('save-file-webconsole')
