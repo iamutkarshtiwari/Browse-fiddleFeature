@@ -201,8 +201,7 @@ class WebConsole():
             #self._activity.remove_alert(alert)
             self._overwrite_alert = OverwriteAlert()
             self._overwrite_alert.props.title = _("The project name already exists.")
-            self._overwrite_alert.props.msg = _('Would you like to overwrite \
-                                                 or choose a new name?')
+            self._overwrite_alert.props.msg = _('Would you like to overwrite or choose a new name?')
             self._activity.add_alert(self._overwrite_alert)
             self._overwrite_alert.show()
             self._overwrite_alert.connect('response',
