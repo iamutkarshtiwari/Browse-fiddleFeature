@@ -199,6 +199,8 @@ class WebActivity(activity.Activity):
 
         self._primary_toolbar._options_toolbar.connect('add-image-webconsole', self._add_image_webconsole_button_cb)
 
+        self._primary_toolbar._options_toolbar.connect("view-page-source", self._show_page_source_cb)
+
         self._edit_toolbar_button = ToolbarButton(
             page=self._edit_toolbar, icon_name='toolbar-edit')
 
@@ -499,6 +501,9 @@ class WebActivity(activity.Activity):
 
     def _add_image_webconsole_button_cb(self, button):
         self._web_console.add_image()
+
+    def _show_page_source_cb(self, button):
+        self._web_console.view_source()
 
     def _go_library_button_cb(self, button):
         self._tabbed_view.load_homepage(ignore_gconf=True)

@@ -29,10 +29,12 @@ from sugar3.graphics import style
 from sugar3.graphics.toolbutton import ToolButton
 from sugar3.graphics.toolbarbox import ToolbarButton
 from sugar3.graphics.toggletoolbutton import ToggleToolButton
+from sugar3.activity import activity
 
 from browser import Browser
 from browser import ZOOM_ORIGINAL
 import json
+import os
 
 
 class OptionsToolbar(Gtk.Toolbar):
@@ -45,6 +47,7 @@ class OptionsToolbar(Gtk.Toolbar):
         'open-file-webconsole': (GObject.SignalFlags.RUN_FIRST, None, ([])),
         'run-webconsole': (GObject.SignalFlags.RUN_FIRST, None, ([])),
         'add-image-webconsole': (GObject.SignalFlags.RUN_FIRST, None, ([])),
+        'view-page-source' : (GObject.SignalFlags.RUN_FIRST, None, ([])),
     }
 
     def __init__(self, activity):
@@ -98,15 +101,29 @@ class OptionsToolbar(Gtk.Toolbar):
 
         text = browser.get_main_frame().get_data_source().get_data()
 
-        text = str(text.str)
-        browser = self._activity._tabbed_view.add_tab(next_to_current=True)
+
+        src_path = os.path.join(activity.get_bundle_path(),
+                                "data/web-console.html")
+        src_path = "file://" + src_path
+
+        if text is None:
+            self._activity._alert(_("No source code found!"))
+            return
+
+        if browser.get_uri() != src_path:
+            text = str(text.str)
+            browser = self._activity._tabbed_view.add_tab(next_to_current=True)
+            soup = BeautifulSoup(text)
+            browser.load_string(soup.prettify(), "text/plain", "UTF-8", '/')
+
+        else:
+            self.emit('view-page-source')
 
 
-        soup = BeautifulSoup(text)
-        #print soup.prettify()
 
 
-        browser.load_string(soup.prettify(), "text/plain", "UTF-8", '/')
+
+
 
     def _save_file_webconsole_cb(self, button):
         self.emit('save-file-webconsole')

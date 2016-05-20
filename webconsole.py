@@ -51,6 +51,9 @@ class WebConsole():
         self._storage_dir = os.path.join(self.parent_dir, "default")
         self._extraction_dir = os.path.join(act.get_activity_root(),
                                   "instance")
+        if not os.path.exists(self._extraction_dir):
+            os.makedirs(self._extraction_dir)
+
         try:
             os.makedirs(self._storage_dir)
         except OSError as e:
@@ -59,7 +62,6 @@ class WebConsole():
 
         self._load_status_changed_hid = None
         self._file_path = None
-
 
 
     def __del__(self):
@@ -86,12 +88,18 @@ class WebConsole():
 
         return file_text
 
+    def view_source(self):
+        file_text = self._get_file_text('save')
+        text = file_text
+        browser = self._activity._tabbed_view.add_tab(next_to_current=True)
+        soup = BeautifulSoup(text)
+        browser.load_string(soup.prettify(), "text/plain", "UTF-8", '/')
+
     def _add_to_journal(self, title, file_path):
         jobject = datastore.create()
 
         jobject.metadata['title'] = title
         jobject.metadata['description'] = "Saved from web console"
-
         jobject.metadata['mime_type'] = "application/zip"
         jobject.file_path = file_path
         datastore.write(jobject)
@@ -114,18 +122,14 @@ class WebConsole():
             'notify::load-status', self._load_status_changed_cb)
 
     def _open_empty(self):
-        browser = self._activity._tabbed_view.props.current_browser
+        browser = self._activity._tabbed_view.add_tab(next_to_current=True)
         browser.load_uri(self._src_uri);
         browser.grab_focus();
-
-    def open_new_tab(self):
-        browser = self._activity._tabbed_view.props.current_browser
-        self._open_empty()
 
     def run(self):
         browser = self._activity._tabbed_view.props.current_browser
         if browser.get_uri() != self._src_uri:
-            self.open_new_tab()
+            self._open_empty()
             return
 
         file_text = self._get_file_text('run')
@@ -147,14 +151,14 @@ class WebConsole():
         # Grabs the name between <title> tags
         #output  = re.compile('<title>(.*?)</title>', re.DOTALL |  re.IGNORECASE).findall(file_text)
         output = self._get_title(file_text)
-        #print len(output.strip())
+
+
         if len(output.strip()) != 0:
             # Assigns the path to the directories
-            folder_name = output[0].strip().replace (" ", "_")
+            folder_name = output.strip().replace (" ", "_")
             self._get_path(folder_name)
             # Creates the directory to save the files
-            os.makedirs(self._storage_dir)
-            self._do_save()
+            self.__try_save()
 
         else:
             self._save_alert = SaveAlert()
@@ -175,33 +179,34 @@ class WebConsole():
 
 
     def __save_response_cb(self, alert, response_id):
-
-
         if response_id == Gtk.ResponseType.OK:
             folder_name = alert._name_entry.get_text()
             folder_name = folder_name.strip().replace (" ", "_")
             self._get_path(folder_name)
             self._activity.remove_alert(alert)
 
-            try:
-                # Tries to create a directory
-                os.makedirs(self._storage_dir)
-                self._do_save()
-            except OSError as e:
-                # If the directory with the same name already
-                # exists, ask the user to save with another name
-                self._activity.remove_alert(alert)
-                self._overwrite_alert = OverwriteAlert()
-                self._overwrite_alert.props.msg = _('The project name already exists. \
-                                                Would you like to overwrite or choose a new name?')
-                self._activity.add_alert(self._overwrite_alert)
-                self._overwrite_alert.show()
-                self._overwrite_alert.connect('response',
-                                             self.__overwrite_response_cb)
-                return
+            self.__try_save()
 
         if response_id == Gtk.ResponseType.CANCEL:
             self._activity.remove_alert(alert)
+
+    def __try_save(self):
+        try:
+            # Tries to create a directory
+            os.makedirs(self._storage_dir)
+            self._do_save()
+        except OSError as e:
+            # If the directory with the same name already
+            # exists, ask the user to save with another name
+            #self._activity.remove_alert(alert)
+            self._overwrite_alert = OverwriteAlert()
+            self._overwrite_alert.props.title = _("The project name already exists.")
+            self._overwrite_alert.props.msg = _('Would you like to overwrite \
+                                                 or choose a new name?')
+            self._activity.add_alert(self._overwrite_alert)
+            self._overwrite_alert.show()
+            self._overwrite_alert.connect('response',
+                                         self.__overwrite_response_cb)
 
     def __overwrite_response_cb(self, alert, response_id):
         self._activity.remove_alert(self._overwrite_alert)
@@ -210,8 +215,6 @@ class WebConsole():
 
         if response_id == Gtk.ResponseType.OK:
             self._do_save()
-
-
 
     def _get_path(self, folder_name):
         # Creates the files directory by the specified 'folder_name'
@@ -223,9 +226,7 @@ class WebConsole():
         # Write to file
         with open(self._index_html_path, 'w+') as f:
             soup = BeautifulSoup(file_text)
-            #print soup.prettify()
             f.write(soup.prettify())
-            #f.write(file_text)
 
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
         zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
@@ -235,9 +236,8 @@ class WebConsole():
     def open_file(self):
         browser = self._activity._tabbed_view.props.current_browser
         if browser.get_uri() != self._src_uri:
-            self._activity._alert("It looks like the Web Console is not open." +
-                                  "You can only Open a file from Web Console")
-            return
+            self._open_empty()
+
         picker = FilePicker(self._activity)
         chosen = picker.run()
         picker.destroy()
