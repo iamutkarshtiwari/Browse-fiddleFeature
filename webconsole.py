@@ -16,6 +16,7 @@
 
 from filepicker import FilePicker
 from gettext import gettext as _
+from distutils.dir_util import copy_tree
 import os
 import re
 import tempfile
@@ -49,20 +50,21 @@ class WebConsole():
             os.makedirs(self.parent_dir)
 
         self._storage_dir = os.path.join(self.parent_dir, "default")
+        self._default_dir = self._storage_dir
         self._extraction_dir = os.path.join(act.get_activity_root(),
                                   "instance")
+        print 'did it'
+
         if not os.path.exists(self._extraction_dir):
             os.makedirs(self._extraction_dir)
 
-        try:
+        if not os.path.exists(self._storage_dir):
             os.makedirs(self._storage_dir)
-        except OSError as e:
-            pass
+
         self._index_html_path = os.path.join(self._storage_dir, "index.html")
 
         self._load_status_changed_hid = None
         self._file_path = None
-
 
     def __del__(self):
         shutil.rmtree(self._storage_dir)
@@ -133,8 +135,9 @@ class WebConsole():
             return
 
         file_text = self._get_file_text('run')
-        with open(self._index_html_path, 'w') as f:
-            f.write(file_text)
+        with open(self._index_html_path, 'w+') as f:
+            soup = BeautifulSoup(file_text)
+            f.write(soup.prettify())
 
         title = self._get_title(file_text)
         text_script = \
@@ -151,17 +154,14 @@ class WebConsole():
             return
         file_text = self._get_file_text('save')
         # Grabs the name between <title> tags
-        #output  = re.compile('<title>(.*?)</title>', re.DOTALL |  re.IGNORECASE).findall(file_text)
-        output = self._get_title(file_text)
+        title = self._get_title(file_text)
 
-
-        if len(output.strip()) != 0:
+        if len(title.strip()) != 0:
             # Assigns the path to the directories
-            folder_name = output.strip().replace (" ", "_")
+            folder_name = title.strip().replace (" ", "_")
             self._get_path(folder_name)
             # Creates the directory to save the files
             self.__try_save()
-
         else:
             self._save_alert = SaveAlert()
             self._save_alert.props.title = _('Save As')
@@ -177,8 +177,6 @@ class WebConsole():
             self._save_alert._name_entry.grab_focus()
             self._activity.add_alert(self._save_alert)
             self._save_alert.show()
-
-
 
     def __save_response_cb(self, alert, response_id):
         if response_id == Gtk.ResponseType.OK:
@@ -197,6 +195,7 @@ class WebConsole():
             # Tries to create a directory
             os.makedirs(self._storage_dir)
             self._do_save()
+
         except OSError as e:
             # If the directory with the same name already
             # exists, ask the user to save with another name
@@ -220,7 +219,7 @@ class WebConsole():
     def _get_path(self, folder_name):
         # Creates the files directory by the specified 'folder_name'
         self._storage_dir = os.path.join(self.parent_dir, folder_name)
-        self._index_html_path = os.path.join(self._storage_dir, "index.html")
+        #self._index_html_path = os.path.join(self._storage_dir, "index.html")
 
     def _do_save(self):
         file_text = self._get_file_text('save')
@@ -230,6 +229,7 @@ class WebConsole():
             f.write(soup.prettify())
 
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
+        copy_tree(self._default_dir, self._storage_dir)
         zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
         self._add_to_journal(save_name, zip_name)
 
@@ -242,6 +242,11 @@ class WebConsole():
         picker = FilePicker(self._activity)
         chosen = picker.run()
         picker.destroy()
+
+        if not chosen.endswith('zip'):
+            self._activity._alert("Only zipped project files accepted.")
+            return
+
         if zipfile.is_zipfile(chosen):
             zip_object = zipfile.ZipFile(chosen, 'r')
             valid = False
