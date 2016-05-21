@@ -136,9 +136,11 @@ class WebConsole():
         with open(self._index_html_path, 'w') as f:
             f.write(file_text)
 
+        title = self._get_title(file_text)
         text_script = \
             "var iframe = document.getElementById('iframe');" \
-            "iframe.src = '" + self._index_html_path + "';"
+            "iframe.src = '" + self._index_html_path + "';" \
+            "document.title = '" + title + "';"
         browser.execute_script(text_script)
 
     def save_file(self):
@@ -254,11 +256,17 @@ class WebConsole():
         # Removes the unnecessary files/folders inside 'instance' folder
         shutil.rmtree(self._extraction_dir)
         chosen = os.path.splitext(os.path.basename(os.path.normpath(chosen)))[0]
-        chosen = os.path.splitext(chosen)[0]
-        self._get_path(chosen)
-        zip_object.extractall(os.path.join(self._extraction_dir, chosen))
-        chosen = os.path.join(self._extraction_dir, chosen, "index.html")
+        project_title = os.path.splitext(chosen)[0]
+
+        self._get_path(project_title)
+        # File unzipping
+        zip_object.extractall(os.path.join(self._extraction_dir, project_title))
+        chosen = os.path.join(self._extraction_dir, project_title, "index.html")
         self._open_file_path(chosen)
+
+        browser = self._activity._tabbed_view.props.current_browser
+        fill_title_script = "document.title = '" + project_title + "';"
+        browser.execute_script(fill_title_script)
 
     def add_image(self):
         browser = self._activity._tabbed_view.props.current_browser
