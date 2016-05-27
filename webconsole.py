@@ -37,6 +37,7 @@ from sugar3.datastore import datastore
 
 
 class WebConsole():
+
     def __init__(self, act):
         self._activity = act
 
@@ -44,22 +45,23 @@ class WebConsole():
                                 "data/web-console.html")
         self._src_uri = "file://" + src_path
 
-        self.parent_dir = os.path.join(act.get_activity_root(),
-                                  "Web_Console_Files")
+        self._extraction_dir = os.path.join(act.get_activity_root(),
+                                            "instance")
+
+        if not os.path.exists(self._extraction_dir):
+            os.makedirs(self._extraction_dir)
+
+        self.parent_dir = os.path.join(self._extraction_dir,
+                                       "Web_Console_Files")
         if not os.path.exists(self.parent_dir):
             os.makedirs(self.parent_dir)
 
         self._storage_dir = os.path.join(self.parent_dir, "default")
         self._default_dir = self._storage_dir
-        self._extraction_dir = os.path.join(act.get_activity_root(),
-                                  "instance")
-        print 'did it'
 
-        if not os.path.exists(self._extraction_dir):
-            os.makedirs(self._extraction_dir)
-
-        if not os.path.exists(self._storage_dir):
-            os.makedirs(self._storage_dir)
+        if os.path.exists(self._storage_dir):
+            shutil.rmtree(self._storage_dir)
+        os.makedirs(self._storage_dir)
 
         self._index_html_path = os.path.join(self._storage_dir, "index.html")
 
@@ -116,8 +118,8 @@ class WebConsole():
 
     def _open_with_source(self, file_path):
         browser = self._activity._tabbed_view.props.current_browser
-        browser.load_uri(self._src_uri);
-        browser.grab_focus();
+        browser.load_uri(self._src_uri)
+        browser.grab_focus()
         self._file_path = file_path
 
         self._load_status_changed_hid = browser.connect(
@@ -125,8 +127,8 @@ class WebConsole():
 
     def _open_empty(self):
         browser = self._activity._tabbed_view.add_tab(next_to_current=True)
-        browser.load_uri(self._src_uri);
-        browser.grab_focus();
+        browser.load_uri(self._src_uri)
+        browser.grab_focus()
 
     def run(self):
         browser = self._activity._tabbed_view.props.current_browser
@@ -158,7 +160,7 @@ class WebConsole():
 
         if len(title.strip()) != 0:
             # Assigns the path to the directories
-            folder_name = title.strip().replace (" ", "_")
+            folder_name = title.strip().replace(" ", "_")
             self._get_path(folder_name)
             # Creates the directory to save the files
             self.__try_save()
@@ -168,12 +170,12 @@ class WebConsole():
             self._save_alert.props.msg = _('Provide the name for the project')
             ok_icon = Icon(icon_name='dialog-ok')
             self._save_alert.add_button(Gtk.ResponseType.OK,
-                                                _('Ok'), ok_icon)
+                                        _('Ok'), ok_icon)
             cancel_icon = Icon(icon_name='dialog-cancel')
             self._save_alert.add_button(Gtk.ResponseType.CANCEL,
-                                                _('Cancel'), cancel_icon)
+                                        _('Cancel'), cancel_icon)
             self._save_alert.connect('response',
-                                             self.__save_response_cb)
+                                     self.__save_response_cb)
             self._save_alert._name_entry.grab_focus()
             self._activity.add_alert(self._save_alert)
             self._save_alert.show()
@@ -181,7 +183,7 @@ class WebConsole():
     def __save_response_cb(self, alert, response_id):
         if response_id == Gtk.ResponseType.OK:
             folder_name = alert._name_entry.get_text()
-            folder_name = folder_name.strip().replace (" ", "_")
+            folder_name = folder_name.strip().replace(" ", "_")
             self._get_path(folder_name)
             self._activity.remove_alert(alert)
 
@@ -199,14 +201,16 @@ class WebConsole():
         except OSError as e:
             # If the directory with the same name already
             # exists, ask the user to save with another name
-            #self._activity.remove_alert(alert)
+            # self._activity.remove_alert(alert)
             self._overwrite_alert = OverwriteAlert()
-            self._overwrite_alert.props.title = _("The project name already exists.")
-            self._overwrite_alert.props.msg = _('Would you like to overwrite or choose a new name?')
+            self._overwrite_alert.props.title = _(
+                "The project name already exists.")
+            self._overwrite_alert.props.msg = _(
+                'Would you like to overwrite or choose a new name?')
             self._activity.add_alert(self._overwrite_alert)
             self._overwrite_alert.show()
             self._overwrite_alert.connect('response',
-                                         self.__overwrite_response_cb)
+                                          self.__overwrite_response_cb)
 
     def __overwrite_response_cb(self, alert, response_id):
         self._activity.remove_alert(self._overwrite_alert)
@@ -219,7 +223,7 @@ class WebConsole():
     def _get_path(self, folder_name):
         # Creates the files directory by the specified 'folder_name'
         self._storage_dir = os.path.join(self.parent_dir, folder_name)
-        #self._index_html_path = os.path.join(self._storage_dir, "index.html")
+        # self._index_html_path = os.path.join(self._storage_dir, "index.html")
 
     def _do_save(self):
         file_text = self._get_file_text('save')
@@ -230,9 +234,9 @@ class WebConsole():
 
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
         copy_tree(self._default_dir, self._storage_dir)
-        zip_name = shutil.make_archive(save_name, 'zip', self._storage_dir)
+        zip_name = shutil.make_archive(os.path.join(
+            self._extraction_dir, save_name), 'zip', self._storage_dir)
         self._add_to_journal(save_name, zip_name)
-
 
     def open_file(self):
         browser = self._activity._tabbed_view.props.current_browser
@@ -253,20 +257,27 @@ class WebConsole():
             for name in zip_object.namelist():
                 if name == 'index.html':
                     valid = True
-                    break;
+                    break
             if not valid:
                 self._activity._alert("No index.html file in the zip folder.")
                 return
 
-        # Removes the unnecessary files/folders inside 'instance' folder
-        shutil.rmtree(self._extraction_dir)
-        chosen = os.path.splitext(os.path.basename(os.path.normpath(chosen)))[0]
+        # Removes the unnecessary files inside
+        # 'instance/Webconsole_files/default' folder
+        if os.path.exists(self._default_dir):
+            shutil.rmtree(self._default_dir)
+        os.makedirs(self._default_dir)
+
+        chosen = os.path.splitext(
+            os.path.basename(os.path.normpath(chosen)))[0]
         project_title = os.path.splitext(chosen)[0]
 
         self._get_path(project_title)
         # File unzipping
-        zip_object.extractall(os.path.join(self._extraction_dir, project_title))
-        chosen = os.path.join(self._extraction_dir, project_title, "index.html")
+        zip_object.extractall(os.path.join(
+            self._extraction_dir, project_title))
+        chosen = os.path.join(self._extraction_dir,
+                              project_title, "index.html")
         self._open_file_path(chosen)
 
         browser = self._activity._tabbed_view.props.current_browser
@@ -284,7 +295,6 @@ class WebConsole():
         picker.destroy()
         extensions = {".jpg", ".png", ".gif", ".jpe"}
         valid = False
-        self._activity._alert(chosen)
         for ext in extensions:
             if chosen.endswith(ext):
                 valid = True
@@ -292,11 +302,10 @@ class WebConsole():
         if not valid:
             self._activity._alert("Only jpg, png and gif files accepted")
             return
+        self._activity._alert(chosen)
         image_name = os.path.basename(os.path.normpath(chosen))
         image_path = os.path.join(self._storage_dir, image_name)
         shutil.copyfile(chosen, image_path)
-
-
 
     def _get_javascript_input(self, data):
         start_head = data.find("<head>")
@@ -314,8 +323,8 @@ class WebConsole():
         if (data.find("src=", start_script_tag, end_script_tag) > 0 or
                 data.find("src =", start_script_tag, end_script_tag) > 0):
             return ""
-        #return data[end_script_tag + 1 : end_script]
-        return (BeautifulSoup(data[end_script_tag + 1 : end_script])).prettify()
+        # return data[end_script_tag + 1 : end_script]
+        return (BeautifulSoup(data[end_script_tag + 1: end_script])).prettify()
 
     def _get_css_input(self, data):
         start_head = data.find("<head>")
@@ -330,22 +339,22 @@ class WebConsole():
         if (start_head > start_style_tag or end_head < end_style or
                 end_style_tag > end_style):
             return ""
-        #return data[end_style_tag + 1 : end_style]
-        return (BeautifulSoup(data[end_style_tag + 1 : end_style])).prettify()
+        # return data[end_style_tag + 1 : end_style]
+        return (BeautifulSoup(data[end_style_tag + 1: end_style])).prettify()
 
     def _get_html_input(self, data):
         start = data.find("<body>")
         end = data.find("</body>")
         if start > -1 and end > -1 and start < end:
-            #return data[start + 6 : end]
-            return (BeautifulSoup(data[start + 6 : end])).prettify()
+            # return data[start + 6 : end]
+            return (BeautifulSoup(data[start + 6: end])).prettify()
         return ""
 
     def _get_title(self, data):
         start = data.find("<title>")
         end = data.find("</title>")
         if start > -1 and end > -1 and start < end:
-            return data[start + 7 : end]
+            return data[start + 7: end]
         return ""
 
     def _escape_string(self, string):
@@ -362,18 +371,15 @@ class WebConsole():
         html = self._escape_string(self._get_html_input(data))
         title = self._escape_string(self._get_title(data))
 
-        fill_js_script = \
-            "var div = document.getElementById('js');" \
+        fill_js_script = "var div = document.getElementById('js');" \
             "div.value = '" + js + "';"
         browser.execute_script(fill_js_script)
 
-        fill_css_script = \
-            "var div = document.getElementById('css');" \
+        fill_css_script = "var div = document.getElementById('css');" \
             "div.value = '" + css + "';"
         browser.execute_script(fill_css_script)
 
-        fill_html_script = \
-            "var div = document.getElementById('html');" \
+        fill_html_script = "var div = document.getElementById('html');" \
             "div.value = '" + html + "';"
         browser.execute_script(fill_html_script)
 
@@ -412,6 +418,7 @@ class SaveAlert(Alert):
         self._hbox.pack_start(halign, False, False, 0)
         halign.show()
         self.show_all()
+
 
 class OverwriteAlert(Alert):
     """
