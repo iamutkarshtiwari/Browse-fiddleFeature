@@ -147,6 +147,7 @@ _logger = logging.getLogger('web-activity')
 
 
 class WebActivity(activity.Activity):
+
     def __init__(self, handle):
         activity.Activity.__init__(self, handle)
 
@@ -191,15 +192,20 @@ class WebActivity(activity.Activity):
 
         self._primary_toolbar.connect('reset-home', self._reset_home_button_cb)
 
-        self._primary_toolbar._options_toolbar.connect('save-file-webconsole', self._save_file_webconsole_button_cb)
+        self._primary_toolbar._options_toolbar.connect(
+            'save-file-webconsole', self._save_file_webconsole_button_cb)
 
-        self._primary_toolbar._options_toolbar.connect('open-file-webconsole', self._open_file_webconsole_button_cb)
+        self._primary_toolbar._options_toolbar.connect(
+            'open-file-webconsole', self._open_file_webconsole_button_cb)
 
-        self._primary_toolbar._options_toolbar.connect('run-webconsole', self._run_webconsole_button_cb)
+        self._primary_toolbar._options_toolbar.connect(
+            'run-webconsole', self._run_webconsole_button_cb)
 
-        self._primary_toolbar._options_toolbar.connect('add-image-webconsole', self._add_image_webconsole_button_cb)
+        self._primary_toolbar._options_toolbar.connect(
+            'add-image-webconsole', self._add_image_webconsole_button_cb)
 
-        self._primary_toolbar._options_toolbar.connect("view-page-source", self._show_page_source_cb)
+        self._primary_toolbar._options_toolbar.connect(
+            "view-page-source", self._show_page_source_cb)
 
         self._edit_toolbar_button = ToolbarButton(
             page=self._edit_toolbar, icon_name='toolbar-edit')
@@ -516,6 +522,10 @@ class WebActivity(activity.Activity):
         self._tabbed_view.reset_homepage()
         self._alert(_('The default initial page was configured'))
 
+    def _prompt_save_on_close(self):
+        self._web_console.save_file()
+        self._force_close = True
+
     def _alert(self, title, text=None):
         alert = NotifyAlert(timeout=5)
         alert.props.title = title
@@ -698,6 +708,10 @@ class WebActivity(activity.Activity):
     def can_close(self):
         if self._force_close:
             return True
+        # Checks if fiddler is active
+        if self._web_console._is_fiddler_active():
+            self._prompt_save_on_close()
+            return False
         elif downloadmanager.can_quit():
             return True
         else:

@@ -51,12 +51,12 @@ class WebConsole():
         if not os.path.exists(self._extraction_dir):
             os.makedirs(self._extraction_dir)
 
-        self.parent_dir = os.path.join(self._extraction_dir,
-                                       "Web_Console_Files")
-        if not os.path.exists(self.parent_dir):
-            os.makedirs(self.parent_dir)
+        self._parent_dir = os.path.join(self._extraction_dir,
+                                        "Web_Console_Files")
+        if not os.path.exists(self._parent_dir):
+            os.makedirs(self._parent_dir)
 
-        self._storage_dir = os.path.join(self.parent_dir, "default")
+        self._storage_dir = os.path.join(self._parent_dir, "default")
         self._default_dir = self._storage_dir
 
         if os.path.exists(self._storage_dir):
@@ -70,6 +70,19 @@ class WebConsole():
 
     def __del__(self):
         shutil.rmtree(self._storage_dir)
+
+    def __clean_fiddler_dir(self):
+        if os.path.exists(self._parent_dir):
+            shutil.rmtree(self._parent_dir)
+        os.makedirs(self._parent_dir)
+        self._storage_dir = os.path.join(self._parent_dir, "default")
+        self._default_dir = self._storage_dir
+        os.makedirs(self._storage_dir)
+        self._index_html_path = os.path.join(self._storage_dir, "index.html")
+
+        # Close the activity if 'force close' is activated
+        if self._activity._force_close:
+            self._activity.close()
 
     def _get_file_text(self, pattern):
         browser = self._activity._tabbed_view.props.current_browser
@@ -107,6 +120,8 @@ class WebConsole():
         jobject.metadata['mime_type'] = "application/zip"
         jobject.file_path = file_path
         datastore.write(jobject)
+        # Cleans the instance directory after every save
+        self.__clean_fiddler_dir()
 
     def _load_status_changed_cb(self, widget, param):
         status = widget.get_load_status()
@@ -222,7 +237,7 @@ class WebConsole():
 
     def _get_path(self, folder_name):
         # Creates the files directory by the specified 'folder_name'
-        self._storage_dir = os.path.join(self.parent_dir, folder_name)
+        self._storage_dir = os.path.join(self._parent_dir, folder_name)
         # self._index_html_path = os.path.join(self._storage_dir, "index.html")
 
     def _do_save(self):
@@ -235,8 +250,15 @@ class WebConsole():
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
         copy_tree(self._default_dir, self._storage_dir)
         zip_name = shutil.make_archive(os.path.join(
-            self._extraction_dir, save_name), 'zip', self._storage_dir)
+            self._extraction_dir, save_name), 'zip', self._default_dir)
         self._add_to_journal(save_name, zip_name)
+
+    def _is_fiddler_active(self):
+        browser = self._activity._tabbed_view.props.current_browser
+        if browser.get_uri() != self._src_uri:
+            return False
+        else:
+            return True
 
     def open_file(self):
         browser = self._activity._tabbed_view.props.current_browser
@@ -304,7 +326,7 @@ class WebConsole():
             return
         self._activity._alert(chosen)
         image_name = os.path.basename(os.path.normpath(chosen))
-        image_path = os.path.join(self._storage_dir, image_name)
+        image_path = os.path.join(self._default_dir, image_name)
         shutil.copyfile(chosen, image_path)
 
     def _get_javascript_input(self, data):
