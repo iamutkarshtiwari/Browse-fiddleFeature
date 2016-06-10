@@ -74,7 +74,22 @@ def remove_all_downloads():
         download.cleanup()
 
 
+def overall_downloads_progress():
+    '''
+    Returns the average progress of "all" the concurrent
+    downloads running in background
+    '''
+    if len(_active_downloads) != 0:
+        total_progress = 0.0
+        for download in _active_downloads:
+            total_progress += (download._progress / 100.0)
+        return (total_progress / num_downloads())
+    else:
+        return 0.0
+
+
 class Download(object):
+
     def __init__(self, download, browser):
         self._download = download
         self._activity = browser.get_toplevel()

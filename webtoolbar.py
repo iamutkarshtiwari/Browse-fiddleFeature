@@ -43,9 +43,11 @@ from sugar3.graphics.icon import Icon
 import tempfile
 import filepicker
 import places
+import downloadmanager
 from optionstoolbar import OptionsToolbar
 from browser import Browser
 from browser import HOME_PAGE_GCONF_KEY, LIBRARY_PATH
+from progresstoolbutton import ProgressToolButton
 
 from pdfviewer import DummyBrowser
 
@@ -395,6 +397,15 @@ class PrimaryToolbar(ToolbarBase):
         # FIXME, this is a hack, should be done in the theme:
         palette._content.set_border_width(1)
 
+        # Downloads ProgressIcon
+        self._download_icon = ProgressToolButton('emblem-downloads',
+                                                 style.STANDARD_ICON_SIZE, 'vertical')
+        self._download_icon.set_tooltip(_('Downloads'))
+        self._download_icon.props.sensitive = False
+        down_id = GObject.timeout_add(500, self.__download_running_cb)
+        toolbar.insert(self._download_icon, -1)
+        self._download_icon.show()
+
         self._link_add = ToolButton('emblem-favorite')
         self._link_add.set_tooltip(_('Bookmark'))
         self._link_add.connect('clicked', self._link_add_clicked_cb)
@@ -409,7 +420,7 @@ class PrimaryToolbar(ToolbarBase):
         self._options_toolbar = OptionsToolbar(self._activity)
         self._options_toolbar_button = ToolbarButton(
             page=self._options_toolbar, icon_name='options')
-        toolbar.insert(self._options_toolbar_button , -1)
+        toolbar.insert(self._options_toolbar_button, -1)
 
         stop_button = StopButton(self._activity)
         toolbar.insert(stop_button, -1)
@@ -433,6 +444,19 @@ class PrimaryToolbar(ToolbarBase):
                                          self.__screen_size_changed_cb)
 
         self._configure_toolbar()
+
+    def __download_running_cb(self):
+        '''
+        Updates the downloadIcon tooltip message and progress value.
+        '''
+        progress = downloadmanager.overall_downloads_progress()
+        self._download_icon.update(progress)
+        if progress > 0.0:
+            self._download_icon.set_tooltip(
+                _("Downloading.. {}%".format(int(progress * 100))))
+        else:
+            self._download_icon.set_tooltip(_("No active downloads"))
+        return True
 
     def __key_press_event_cb(self, entry, event):
         self._tabbed_view.current_browser.loading_uri = entry.props.text
