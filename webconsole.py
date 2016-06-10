@@ -28,6 +28,7 @@ from gi.repository import WebKit
 from gi.repository import GObject
 from gi.repository import GLib
 from BeautifulSoup import BeautifulSoup
+from html5print import CSSBeautifier
 
 from sugar3.graphics import style
 from sugar3.graphics.alert import ErrorAlert, Alert
@@ -349,7 +350,6 @@ class WebConsole():
         if (data.find("src=", start_script_tag, end_script_tag) > 0 or
                 data.find("src =", start_script_tag, end_script_tag) > 0):
             return ""
-        # return data[end_script_tag + 1 : end_script]
         return (BeautifulSoup(data[end_script_tag + 1: end_script])).prettify()
 
     def _get_css_input(self, data):
@@ -365,13 +365,12 @@ class WebConsole():
         if (start_head > start_style_tag or end_head < end_style or
                 end_style_tag > end_style):
             return ""
-        return data[end_style_tag + 1: end_style]
+        return CSSBeautifier.beautify(data[end_style_tag + 1: end_style])
 
     def _get_html_input(self, data):
         start = data.find("<body>")
         end = data.find("</body>")
         if start > -1 and end > -1 and start < end:
-            # return data[start + 6 : end]
             return (BeautifulSoup(data[start + 6: end])).prettify()
         return ""
 
