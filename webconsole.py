@@ -149,7 +149,7 @@ class WebConsole():
         browser = self._activity._tabbed_view.props.current_browser
         if browser.get_uri() != self._src_uri:
             self._open_empty()
-            return
+            # return
 
         file_text = self._get_file_text('run')
         with open(self._index_html_path, 'w+') as f:
@@ -250,7 +250,7 @@ class WebConsole():
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
         copy_tree(self._default_dir, self._storage_dir)
         zip_name = shutil.make_archive(os.path.join(
-            self._extraction_dir, save_name), 'zip', self._default_dir)
+            self._extraction_dir, save_name), 'zip', self._parent_dir, save_name)
         self._add_to_journal(save_name, zip_name)
 
     def _is_fiddler_active(self):
@@ -273,6 +273,9 @@ class WebConsole():
             self._activity._alert("Only zipped project files accepted.")
             return
 
+        zip_object = zipfile.ZipFile(chosen, 'r')
+
+        '''
         if zipfile.is_zipfile(chosen):
             zip_object = zipfile.ZipFile(chosen, 'r')
             valid = False
@@ -283,6 +286,7 @@ class WebConsole():
             if not valid:
                 self._activity._alert("No index.html file in the zip folder.")
                 return
+        '''
 
         # Removes the unnecessary files inside
         # 'instance/Webconsole_files/default' folder
@@ -296,8 +300,8 @@ class WebConsole():
 
         self._get_path(project_title)
         # File unzipping
-        zip_object.extractall(os.path.join(
-            self._extraction_dir, project_title))
+        zip_object.extractall(self._extraction_dir)
+        #os.path.join(self._extraction_dir, project_title)
         chosen = os.path.join(self._extraction_dir,
                               project_title, "index.html")
         self._open_file_path(chosen)
@@ -361,8 +365,7 @@ class WebConsole():
         if (start_head > start_style_tag or end_head < end_style or
                 end_style_tag > end_style):
             return ""
-        # return data[end_style_tag + 1 : end_style]
-        return (BeautifulSoup(data[end_style_tag + 1: end_style])).prettify()
+        return data[end_style_tag + 1: end_style]
 
     def _get_html_input(self, data):
         start = data.find("<body>")

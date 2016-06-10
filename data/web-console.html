@@ -16,7 +16,7 @@
       </form>
     </div>
     <div class="output grid">
-      <h2>Output:</h2>
+      <span style="float:left;"><h2>Output:</h2></span>
       <iframe id="iframe"></iframe>
     </div>
     <div id="internal-use-trigger-save-text" style="visibility:hidden;"></div>
@@ -24,6 +24,7 @@
     <div id="internal-use-trigger-run-text" style="visibility:hidden;"></div>
     <textarea id="internal-use-run-text" style="visibility:hidden;"></textarea>
     <script>
+
       (function() {
       // Base template of the iframe.
       var baseTpl =
@@ -32,8 +33,9 @@
           "<head>\n\t\t" +
           "</head>\n\t" +
           "<body>\n\t\n\t" +
-          "<h3>Console:</h3>\n" +
-          "<div style=\"padding: 0 5x; margin-bottom: 10px; border: 1px solid black; width: 100%; height: 100px\" id=\"console\"></div>\n" +
+          "<button id=\"toggle\" onclick=\"clickedBtn(this)\" style=\"display:block;\">Toggle console</button>\n" +
+          "<h3 id=\"console-title\" style=\"display:none;\">Console:</h3>\n" +
+          "<div style=\"padding: 0 5x; display:none; margin-bottom: 10px; border: 1px solid black; width: 100%; height: 100px\" id=\"console\"></div>\n" +
           "</body>\n" +
           "</html>";
 
@@ -66,7 +68,20 @@
             "para.appendChild(node);\n" +
             "var consoleDiv = document.getElementById('console');\n" +
             "consoleDiv.appendChild(para);\n" +
+          "};\n" +
+
+          "function clickedBtn(but) {\n" +
+          "var console = document.getElementById('console');\n" +
+          "var consoleTitle = document.getElementById('console-title');\n" +
+            "if (console.style.display === 'block') {\n" +
+                "console.style.display = 'none';\n" +
+                "consoleTitle.style.display = 'none';\n" +
+            "} else {\n" +
+                "console.style.display = 'block';\n" +
+                "consoleTitle.style.display = 'block';\n" +
+              "}\n" +
           "};";
+
 
       // This function fills the base content of the iframe with that
       // input by the user.
@@ -145,6 +160,7 @@
       // We initially call render so that Console comes.
       render();
       }());
+  
     </script>
   </body>
 </html>
