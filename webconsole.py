@@ -28,7 +28,9 @@ from gi.repository import WebKit
 from gi.repository import GObject
 from gi.repository import GLib
 from BeautifulSoup import BeautifulSoup
-from html5print import CSSBeautifier
+from html5print.cssprint import CSSBeautifier
+from html5print.html5print import HTMLBeautifier
+from html5print.jsprint import JSBeautifier
 
 from sugar3.graphics import style
 from sugar3.graphics.alert import ErrorAlert, Alert
@@ -110,8 +112,8 @@ class WebConsole():
         file_text = self._get_file_text('save')
         text = file_text
         browser = self._activity._tabbed_view.add_tab(next_to_current=True)
-        soup = BeautifulSoup(text)
-        browser.load_string(soup.prettify(), "text/plain", "UTF-8", '/')
+        soup = HTMLBeautifier.beautify(text)
+        browser.load_string(soup, "text/plain", "UTF-8", '/')
 
     def _add_to_journal(self, title, file_path):
         jobject = datastore.create()
@@ -154,8 +156,8 @@ class WebConsole():
 
         file_text = self._get_file_text('run')
         with open(self._index_html_path, 'w+') as f:
-            soup = BeautifulSoup(file_text)
-            f.write(soup.prettify())
+            soup = HTMLBeautifier.beautify(file_text)
+            f.write(soup)
 
         title = self._get_title(file_text)
         text_script = \
@@ -245,8 +247,8 @@ class WebConsole():
         file_text = self._get_file_text('save')
         # Write to file
         with open(self._index_html_path, 'w+') as f:
-            soup = BeautifulSoup(file_text)
-            f.write(soup.prettify())
+            soup = HTMLBeautifier.beautify(file_text)
+            f.write(soup)
 
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
         copy_tree(self._default_dir, self._storage_dir)
@@ -302,7 +304,7 @@ class WebConsole():
         self._get_path(project_title)
         # File unzipping
         zip_object.extractall(self._extraction_dir)
-        #os.path.join(self._extraction_dir, project_title)
+        # os.path.join(self._extraction_dir, project_title)
         chosen = os.path.join(self._extraction_dir,
                               project_title, "index.html")
         self._open_file_path(chosen)
@@ -335,6 +337,7 @@ class WebConsole():
         shutil.copyfile(chosen, image_path)
 
     def _get_javascript_input(self, data):
+        data = JSBeautifier.beautifyTextInHTML(data)
         start_head = data.find("<head>")
         end_head = data.find("</head>")
         start_script_tag = data.find("<script")
@@ -350,7 +353,7 @@ class WebConsole():
         if (data.find("src=", start_script_tag, end_script_tag) > 0 or
                 data.find("src =", start_script_tag, end_script_tag) > 0):
             return ""
-        return (BeautifulSoup(data[end_script_tag + 1: end_script])).prettify()
+        return data[end_script_tag + 1: end_script]
 
     def _get_css_input(self, data):
         start_head = data.find("<head>")
@@ -371,7 +374,7 @@ class WebConsole():
         start = data.find("<body>")
         end = data.find("</body>")
         if start > -1 and end > -1 and start < end:
-            return (BeautifulSoup(data[start + 6: end])).prettify()
+            return HTMLBeautifier.beautify(data[start + 6: end])
         return ""
 
     def _get_title(self, data):
