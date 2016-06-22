@@ -18,6 +18,7 @@ from filepicker import FilePicker
 from gettext import gettext as _
 from distutils.dir_util import copy_tree
 import os
+import pip
 import re
 import tempfile
 import shutil
@@ -28,9 +29,24 @@ from gi.repository import WebKit
 from gi.repository import GObject
 from gi.repository import GLib
 from BeautifulSoup import BeautifulSoup
-from html5print.cssprint import CSSBeautifier
-from html5print.html5print import HTMLBeautifier
-from html5print.jsprint import JSBeautifier
+
+# Installing the dependency
+
+REQUIREMENTS = ['distribute', 'version', 'Cython', 'sortedcollection']
+try:
+    from html5print import JSBeautifier, HTMLBeautifier, CSSBeautifier
+except:
+    pip_args = ['-vvv']
+    proxy = os.environ['http_proxy']
+    if proxy:
+        pip_args.append('--proxy')
+        pip_args.append(proxy)
+    pip_args.append('install')
+    pip_args.append('html5print')
+    #print('Installing requirements: ' + str(REQUIREMENTS))
+    pip.main(initial_args=pip_args)
+    from html5print import JSBeautifier, HTMLBeautifier, CSSBeautifier
+
 
 from sugar3.graphics import style
 from sugar3.graphics.alert import ErrorAlert, Alert
@@ -337,7 +353,7 @@ class WebConsole():
         shutil.copyfile(chosen, image_path)
 
     def _get_javascript_input(self, data):
-        data = JSBeautifier.beautifyTextInHTML(data)
+        #data = JSBeautifier.beautifyTextInHTML(data)
         start_head = data.find("<head>")
         end_head = data.find("</head>")
         start_script_tag = data.find("<script")
@@ -353,7 +369,8 @@ class WebConsole():
         if (data.find("src=", start_script_tag, end_script_tag) > 0 or
                 data.find("src =", start_script_tag, end_script_tag) > 0):
             return ""
-        return data[end_script_tag + 1: end_script]
+        print JSBeautifier.beautify(data[end_script_tag + 1: end_script])
+        return JSBeautifier.beautify(data[end_script_tag + 1: end_script])
 
     def _get_css_input(self, data):
         start_head = data.find("<head>")
