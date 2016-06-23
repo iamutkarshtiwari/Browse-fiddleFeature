@@ -18,7 +18,6 @@ from filepicker import FilePicker
 from gettext import gettext as _
 from distutils.dir_util import copy_tree
 import os
-import pip
 import re
 import tempfile
 import shutil
@@ -28,25 +27,9 @@ from gi.repository import Gtk
 from gi.repository import WebKit
 from gi.repository import GObject
 from gi.repository import GLib
+
+import cssbeautifier as CSSBeautifier
 from BeautifulSoup import BeautifulSoup
-
-# Installing the dependency
-
-REQUIREMENTS = ['distribute', 'version', 'Cython', 'sortedcollection']
-try:
-    from html5print import JSBeautifier, HTMLBeautifier, CSSBeautifier
-except:
-    pip_args = ['-vvv']
-    proxy = os.environ['http_proxy']
-    if proxy:
-        pip_args.append('--proxy')
-        pip_args.append(proxy)
-    pip_args.append('install')
-    pip_args.append('html5print')
-    #print('Installing requirements: ' + str(REQUIREMENTS))
-    pip.main(initial_args=pip_args)
-    from html5print import JSBeautifier, HTMLBeautifier, CSSBeautifier
-
 
 from sugar3.graphics import style
 from sugar3.graphics.alert import ErrorAlert, Alert
@@ -128,7 +111,7 @@ class WebConsole():
         file_text = self._get_file_text('save')
         text = file_text
         browser = self._activity._tabbed_view.add_tab(next_to_current=True)
-        soup = HTMLBeautifier.beautify(text)
+        soup = text  # HTMLBeautifier.beautify(text)
         browser.load_string(soup, "text/plain", "UTF-8", '/')
 
     def _add_to_journal(self, title, file_path):
@@ -172,7 +155,7 @@ class WebConsole():
 
         file_text = self._get_file_text('run')
         with open(self._index_html_path, 'w+') as f:
-            soup = HTMLBeautifier.beautify(file_text)
+            soup = file_text  # HTMLBeautifier.beautify(file_text)
             f.write(soup)
 
         title = self._get_title(file_text)
@@ -263,7 +246,7 @@ class WebConsole():
         file_text = self._get_file_text('save')
         # Write to file
         with open(self._index_html_path, 'w+') as f:
-            soup = HTMLBeautifier.beautify(file_text)
+            soup = file_text  # HTMLBeautifier.beautify(file_text)
             f.write(soup)
 
         save_name = os.path.basename(os.path.normpath(self._storage_dir))
@@ -353,7 +336,9 @@ class WebConsole():
         shutil.copyfile(chosen, image_path)
 
     def _get_javascript_input(self, data):
-        #data = JSBeautifier.beautifyTextInHTML(data)
+        data = JSBeautifier.beautifyTextInHTML(data)
+        #data = jsbeautifier.beautify(data)
+
         start_head = data.find("<head>")
         end_head = data.find("</head>")
         start_script_tag = data.find("<script")
@@ -369,7 +354,8 @@ class WebConsole():
         if (data.find("src=", start_script_tag, end_script_tag) > 0 or
                 data.find("src =", start_script_tag, end_script_tag) > 0):
             return ""
-        print JSBeautifier.beautify(data[end_script_tag + 1: end_script])
+        #data = data[end_script_tag + 1: end_script]
+        #data = jsbeautifier.beautify(data)
         return JSBeautifier.beautify(data[end_script_tag + 1: end_script])
 
     def _get_css_input(self, data):
@@ -391,7 +377,8 @@ class WebConsole():
         start = data.find("<body>")
         end = data.find("</body>")
         if start > -1 and end > -1 and start < end:
-            return HTMLBeautifier.beautify(data[start + 6: end])
+            return BeautifulSoup(data[start + 6: end]).prettify()
+            # return data[start + 6: end]
         return ""
 
     def _get_title(self, data):
