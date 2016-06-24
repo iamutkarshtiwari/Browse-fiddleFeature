@@ -336,7 +336,7 @@ class WebConsole():
         shutil.copyfile(chosen, image_path)
 
     def _get_javascript_input(self, data):
-        data = JSBeautifier.beautifyTextInHTML(data)
+        #data = JSBeautifier.beautifyTextInHTML(data)
         #data = jsbeautifier.beautify(data)
 
         start_head = data.find("<head>")
@@ -356,7 +356,7 @@ class WebConsole():
             return ""
         #data = data[end_script_tag + 1: end_script]
         #data = jsbeautifier.beautify(data)
-        return JSBeautifier.beautify(data[end_script_tag + 1: end_script])
+        return data[end_script_tag + 1: end_script]
 
     def _get_css_input(self, data):
         start_head = data.find("<head>")
